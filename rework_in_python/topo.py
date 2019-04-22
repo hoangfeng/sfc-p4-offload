@@ -6,6 +6,19 @@ VMP4S = 2
 PP4S = 1
 
 
+class Color:
+    PURPLE = '\033[95m'
+    CYAN = '\033[96m'
+    DARKCYAN = '\033[36m'
+    BLUE = '\033[94m'
+    GREEN = '\033[92m'
+    YELLOW = '\033[93m'
+    RED = '\033[91m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+    END = '\033[0m'
+
+
 def read_node_from_file(filename):
     f = open(filename, "r")
     nodelist = []
@@ -55,7 +68,7 @@ def print_list(lst):
         temp += ', '
     temp = temp[:-2]
     temp += ']'
-    print(temp)
+    print(Color.PURPLE + temp + Color.END)
 
 
 class MeasureDuration:
@@ -220,6 +233,7 @@ class Topo:
                         temp = dijkstra_t[i][0]
                         min_node = i
             current_node = min_node
+        a = dijkstra_t['469']
         return dijkstra_t
 
 
@@ -251,7 +265,7 @@ class Algo:
         c_start, c_end = self.construct_cm_graph()
         result, weight = self.topo_clone.shortest_path(self.topo_clone, c_start, c_end)
         lst = self.merge_graph(result)
-        print("***  Compared method  ***")
+        print(Color.GREEN + "***  Compared method  ***" +Color.END)
         print_list(lst)
         print("Weight = " + str(weight))
         return lst, weight
@@ -332,7 +346,7 @@ class Algo:
         return sfc_dic
 
     @staticmethod
-    def isP4 (self, node_uid, currentF):
+    def isP4(self, node_uid, current_func):
         te = self.topo.node_dic[node_uid]
         type_node = 0
         have_current_func = False
@@ -345,12 +359,12 @@ class Algo:
             else:
                 if i == 2:
                     type_node = 2
-            if i == currentF:
+            if i == current_func:
                 have_current_func = True
         return type_node, have_current_func
 
     def layered_graph(self):
-        print("***** Layered Graph *****")
+        print(Color.GREEN + "***** Layered Graph *****" + Color.END)
         # Get all the node function base on SFC
         sfc_dic = self.sfc_workable_node_dic()
         path = []
@@ -359,14 +373,14 @@ class Algo:
         d_table = self.topo.get_shortest_path_table(self.topo, self.start)
         start = self.start
         nearest_node = 0
-        nearest_func = 0
+        nearest_distance = 0
         for i in self.sfc:
             for j in sfc_dic[i]:
-                if nearest_func == 0:
-                    nearest_func = d_table[j.uid][0]
+                if nearest_distance == 0:
+                    nearest_distance = d_table[j.uid][0]
                     nearest_node = j.uid
-                elif nearest_func > d_table[j.uid][0]:
-                    nearest_func = d_table[j.uid][0]
+                elif nearest_distance > d_table[j.uid][0]:
+                    nearest_distance = d_table[j.uid][0]
                     nearest_node = j.uid
             weight += d_table[nearest_node][0]
             getpath = str(nearest_node)
@@ -379,6 +393,8 @@ class Algo:
                 path.append(k)
             start = nearest_node
             d_table = self.topo.get_shortest_path_table(self.topo, nearest_node)
+            if i != self.sfc[len(self.sfc) - 1]:
+                nearest_distance = float('inf')
         # find shortest path in last sfc to end
         d_table = self.topo.get_shortest_path_table(self.topo, path[len(path)-1])
         weight += d_table[str(self.end)][0]
@@ -387,7 +403,6 @@ class Algo:
         while getpath != str(nearest_node):
             result.append(getpath)
             getpath = d_table[str(getpath)][1]
-        # result.append(str(nearest_node))
         for i in reversed(result):
             path.append(i)
         print_list(path)
@@ -396,7 +411,7 @@ class Algo:
 
     # my proposed method
     def proposed_method(self):
-        print("####  My proposed method ####")
+        print(Color.GREEN + "####  My proposed method ####"+ Color.END)
         # Get all the node function base on SFC
         # Treat P4 switch as single node in SFC
         sfc_dic = self.sfc_workable_node_p4_dic()
@@ -404,10 +419,9 @@ class Algo:
         weight = 0
         # find shortest path in each layer graph
         d_table = self.topo.get_shortest_path_table(self.topo, self.start)
-        # d_table = self.topo.get_shortest_path_table(self.topo, '558')
         start = self.start
         nearest_node = 0
-        nearest_func = 0
+        nearest_distance = 0
         # same weight but have more desire than others
         skip = 0
         for i in self.sfc:
@@ -415,17 +429,18 @@ class Algo:
                 skip = skip - 1
             else:
                 for j in sfc_dic[i]:
-                    if nearest_func == 0:
-                        nearest_func = d_table[j.uid][0]
-                        nearest_node = j.uid
-                    elif nearest_func > d_table[j.uid][0]:
-                        nearest_func = d_table[j.uid][0]
-                        nearest_node = j.uid
-                node_type, currentF = self.isP4(self, nearest_node, i)
+                    if j.uid != start:
+                        if nearest_distance == 0:
+                            nearest_distance = d_table[j.uid][0]
+                            nearest_node = j.uid
+                        elif nearest_distance > d_table[j.uid][0]:
+                            nearest_distance = d_table[j.uid][0]
+                            nearest_node = j.uid
+                node_type, current_func = self.isP4(self, nearest_node, i)
                 # Check dead-end
                 de_check = self.topo.get_shortest_path_table(self.topo, nearest_node)
                 if de_check[str(self.end)][0] != float("inf"):
-                    if currentF:
+                    if current_func:
                         skip = node_type
                     else:
                         skip = node_type - 1
@@ -444,6 +459,8 @@ class Algo:
                     d_table = de_check
                 else:
                     print('Dead-End detected')
+            if i != self.sfc[len(self.sfc) - 1]:
+                nearest_distance = float('inf')
         # find shortest path in last sfc to end
         d_table = self.topo.get_shortest_path_table(self.topo, path[len(path) - 1])
         weight += d_table[str(self.end)][0]
@@ -461,56 +478,56 @@ class Algo:
         return path, weight
 
 
-class Color:
-    PURPLE = '\033[95m'
-    CYAN = '\033[96m'
-    DARKCYAN = '\033[36m'
-    BLUE = '\033[94m'
-    GREEN = '\033[92m'
-    YELLOW = '\033[93m'
-    RED = '\033[91m'
-    BOLD = '\033[1m'
-    UNDERLINE = '\033[4m'
-    END = '\033[0m'
-
-
 class Test:
     @staticmethod
     def test_path(topo, test, sfc):
-        node_dic = node_to_dict(topo.node)
         sfc_index = 0
         result = ''
+        a = topo.node_dic['301']
+        colorP4 = 0
         for i in test:
-            for j in node_dic[i]:
-                if j in sfc:
+            for j in topo.node_dic[i]:
+                if j in sfc and j == sfc[sfc_index]:
                     result += '('
                     result += Color.RED + str(sfc[sfc_index]) + Color.END
                     if sfc_index < len(sfc)-1:
                         sfc_index = sfc_index + 1
                     result += ')'
-            result += str(i) + '; '
+                elif j == 1 or j == 2:
+	                colorP4 = 1
+            if colorP4 == 1:
+                result +=Color.YELLOW + str(i) +  Color.END + '; '
+                colorP4 = 0
+            else:
+	            result +=  str(i)  + '; '
         print(result)
+        pass
 
     @staticmethod
     def test_path_all(topo, test, sfc):
-        node_dic = node_to_dict(topo.node)
         sfc_index = 0
         result = ''
         for i in test:
             # if node_dic[i]:
             result += '('
-            for j in node_dic[i]:
-                if j in sfc:
+            for j in topo.node_dic[i]:
+                if j in sfc and j == sfc[sfc_index]:
                     result += Color.RED + str(sfc[sfc_index]) + Color.END + ', '
                     if sfc_index < len(sfc)-1:
                         sfc_index = sfc_index + 1
+                elif j == 1 or j == 2:
+                    result += Color.YELLOW + str(j) + Color.END + ', '
                 else:
                     result += str(j) + ', '
             result = result[:-2]
-            if node_dic[i]:
+            if topo.node_dic[i]:
                 result += ')'
             result += ' ' + str(i) + '; '
         print(result)
+
+    @staticmethod
+    def stress_test(topo):
+        pass
 
 
 def main():
@@ -518,30 +535,43 @@ def main():
     # start = 575
     # end = 467
     # sfc = [11, 5, 29, 8]
-
-    start = 246
-    end = 1
-    sfc = [11, 6, 5, 8, 13]
+    #
+    # start = 246
+    # end = 1
+    # sfc = [11, 6, 5, 8, 13]
+    #
+    start = 301
+    end = 561
+    sfc = [3, 27, 20, 19, 4]
 
     node = read_node_from_file("../function.txt")
     link = read_link_from_file("../output.txt")
     topo = Topo(node, link)
     t = Test
-    with MeasureDuration() as m:
-        r, w = topo.shortest_path(topo, start, end)
-        print("***  Dijkstra run  ***")
-        print_list(r)
-        print("Weight = " + str(w))
+    # Run dijkstra
+    # with MeasureDuration() as m:
+    #     r, w = topo.shortest_path(topo, start, end)
+    #     print("***  Dijkstra run  ***")
+    #     print_list(r)
+    #     print("Weight = " + str(w))
+    print_list(sfc)
+    print('Start = ' + str(start) + '  End = ' + str(end))
+    print('')
     al = Algo(start, end, topo, sfc)
     with MeasureDuration() as m:
         p, v = al.compare_method()
+    print('')
     with MeasureDuration() as m:
         p1, v1 = al.layered_graph()
+    print('')
     with MeasureDuration() as m:
         p2, w2 = al.proposed_method()
+
+    print("")
     t.test_path(topo, p, sfc)
     t.test_path(topo, p1, sfc)
     t.test_path(topo, p2, sfc)
+    t.test_path_all(topo, p2, sfc)
 
 
 if __name__ == "__main__":
