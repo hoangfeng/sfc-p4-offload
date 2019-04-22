@@ -1,0 +1,1 @@
+{id:1,label:"Node 1 [6,7,5]"},{id:2,label:"Node 2 [5]"},{id:3,label:"Node 3 [2,9]"},{id:4,label:"Node 4 [2]"},{id:5,label:"Node 5 [0,9,3]"}
