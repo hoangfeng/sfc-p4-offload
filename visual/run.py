@@ -33,5 +33,5 @@ json+="]}"
 file = open('node.json', 'w')
 file.write(json)
 file.close()
-print json
+print(json)
 webbrowser.open("index.html");

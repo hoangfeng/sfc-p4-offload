@@ -494,12 +494,12 @@ class Test:
                         sfc_index = sfc_index + 1
                     result += ')'
                 elif j == 1 or j == 2:
-	                colorP4 = 1
+                    colorP4 = 1
             if colorP4 == 1:
-                result +=Color.YELLOW + str(i) +  Color.END + '; '
+                result += Color.YELLOW + str(i) + Color.END + '; '
                 colorP4 = 0
             else:
-	            result +=  str(i)  + '; '
+                result += str(i) + '; '
         print(result)
         pass
 
@@ -571,7 +571,7 @@ def main():
     t.test_path(topo, p, sfc)
     t.test_path(topo, p1, sfc)
     t.test_path(topo, p2, sfc)
-    t.test_path_all(topo, p2, sfc)
+    # t.test_path_all(topo, p2, sfc)
 
 
 if __name__ == "__main__":
